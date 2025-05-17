@@ -11,7 +11,12 @@ export async function GET() {
     const teacherSnap = await getDoc(teacherRef);
 
     if (!teacherSnap.exists()) {
-      return NextResponse.json({ error: 'Teacher not found' }, { status: 404 });
+      return NextResponse.json({
+        name: "Dr. Rajeeb Chakraborty",
+        instrument: "Sarod",
+        bio: "Acclaimed sarod maestro with over 30 years of performance experience across global stages. Dr. Chakraborty blends traditional techniques with innovative approaches for students of all levels.",
+        profilePicture: "/images/teacher_profile.jpg"
+      });
     }
 
     const teacher = {

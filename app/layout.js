@@ -3,7 +3,7 @@ import { initializeDatabase } from '@/lib/initDatabase';
 import './globals.css';
 
 export const metadata = {
-  title: 'RiyazTime - Sarod Classes with Dr. Rajeeb Chakraborty',
+  title: 'Sarodwala - Sarod Classes with Dr. Rajeeb Chakraborty',
   description: 'Book personalized Sarod classes with Dr. Rajeeb Chakraborty',
 };
 

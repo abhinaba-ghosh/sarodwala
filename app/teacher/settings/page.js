@@ -11,6 +11,7 @@ export default function TeacherSettings() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [savedMessage, setSavedMessage] = useState('');
+  const [bookingsByDate, setBookingsByDate] = useState({});
 
   // Time slot configurations
   const [defaultTimeSlots, setDefaultTimeSlots] = useState({});
@@ -52,12 +53,13 @@ export default function TeacherSettings() {
     return calendarDays;
   };
 
-  // Load teacher settings
+  // Load teacher settings and bookings
   useEffect(() => {
     async function loadTeacherSettings() {
       setIsLoading(true);
 
       try {
+        // Fetch teacher availability
         const response = await fetch('/api/teacher/availability');
 
         if (!response.ok) {
@@ -80,6 +82,26 @@ export default function TeacherSettings() {
           // Generate default time slots
           generateDefaultTimeSlots();
         }
+
+        // Fetch all bookings
+        const bookingsResponse = await fetch('/api/bookings/all');
+        if (bookingsResponse.ok) {
+          const bookings = await bookingsResponse.json();
+
+          // Group bookings by date
+          const bookingsByDateMap = {};
+          bookings.forEach(booking => {
+            if (booking.date) {
+              const dateStr = booking.date.split('T')[0]; // YYYY-MM-DD format
+              if (!bookingsByDateMap[dateStr]) {
+                bookingsByDateMap[dateStr] = [];
+              }
+              bookingsByDateMap[dateStr].push(booking);
+            }
+          });
+
+          setBookingsByDate(bookingsByDateMap);
+        }
       } catch (error) {
         console.error('Error loading teacher settings:', error);
         // Generate default available dates and time slots
@@ -91,9 +113,10 @@ export default function TeacherSettings() {
     }
 
     loadTeacherSettings();
-  }, [selectedMonth, selectedYear, generateDefaultAvailableDates, generateDefaultTimeSlots]);
+  }, [selectedMonth, selectedYear]);
 
-  function generateDefaultAvailableDates() {
+  // Function to generate default available dates
+  const generateDefaultAvailableDates = () => {
     const defaultDates = [];
     const now = new Date();
 
@@ -111,17 +134,11 @@ export default function TeacherSettings() {
     }
 
     setAvailableDates(defaultDates);
-  }
+  };
 
-  function generateDefaultTimeSlots() {
+  // Function to generate default time slots
+  const generateDefaultTimeSlots = () => {
     const defaultSlots = {};
-
-    // All possible time slots
-    const allTimeSlots = [
-      '5:30 PM', '6:00 PM', '6:30 PM', '7:00 PM', '7:30 PM',
-      '8:00 PM', '8:30 PM', '9:00 PM', '9:30 PM', '10:00 PM',
-      '10:30 PM', '11:00 PM'
-    ];
 
     // For each available date, set all time slots to available
     availableDates.forEach(date => {
@@ -133,7 +150,7 @@ export default function TeacherSettings() {
     });
 
     setDefaultTimeSlots(defaultSlots);
-  }
+  };
 
   // Toggle date availability
   const toggleDateAvailability = (date) => {
@@ -164,6 +181,14 @@ export default function TeacherSettings() {
   const toggleTimeSlot = (date, timeSlot) => {
     const dateString = date.toISOString().split('T')[0];
 
+    // Check if this slot is already booked
+    const isBooked = bookingsByDate[dateString]?.some(booking => booking.timeSlot === timeSlot);
+
+    // Don't allow toggling booked slots
+    if (isBooked) {
+      return;
+    }
+
     setCustomTimeSlots(prevSlots => {
       const newSlots = { ...prevSlots };
 
@@ -175,6 +200,54 @@ export default function TeacherSettings() {
       // Toggle the selected slot
       newSlots[dateString][timeSlot] = !newSlots[dateString][timeSlot];
 
+      return newSlots;
+    });
+  };
+
+  // Function to select all time slots for a date
+  const handleSelectAll = (date) => {
+    const dateString = date.toISOString().split('T')[0];
+
+    setCustomTimeSlots(prevSlots => {
+      const newSlots = { ...prevSlots };
+
+      // Get existing date slots or create new ones
+      const dateSlotsConfig = { ...newSlots[dateString] } || {};
+
+      // Set all time slots to true (enabled)
+      allTimeSlots.forEach(slot => {
+        // Skip slots that are already booked
+        const isBooked = bookingsByDate[dateString]?.some(booking => booking.timeSlot === slot);
+        if (!isBooked) {
+          dateSlotsConfig[slot] = true;
+        }
+      });
+
+      newSlots[dateString] = dateSlotsConfig;
+      return newSlots;
+    });
+  };
+
+  // Function to deselect all time slots for a date
+  const handleDeselectAll = (date) => {
+    const dateString = date.toISOString().split('T')[0];
+
+    setCustomTimeSlots(prevSlots => {
+      const newSlots = { ...prevSlots };
+
+      // Get existing date slots or create new ones
+      const dateSlotsConfig = { ...newSlots[dateString] } || {};
+
+      // Set all time slots to false (disabled)
+      allTimeSlots.forEach(slot => {
+        // Skip slots that are already booked
+        const isBooked = bookingsByDate[dateString]?.some(booking => booking.timeSlot === slot);
+        if (!isBooked) {
+          dateSlotsConfig[slot] = false;
+        }
+      });
+
+      newSlots[dateString] = dateSlotsConfig;
       return newSlots;
     });
   };
@@ -325,7 +398,6 @@ export default function TeacherSettings() {
                   <div className="text-center font-medium text-gray-600">Tue</div>
                   <div className="text-center font-medium text-gray-600">Wed</div>
                   <div className="text-center font-medium text-gray-600">Thu</div>
-                  <div className="text-center font-medium text-gray-600">Thu</div>
                   <div className="text-center font-medium text-gray-600">Fri</div>
                   <div className="text-center font-medium text-gray-600">Sat</div>
                 </div>
@@ -370,6 +442,20 @@ export default function TeacherSettings() {
                           Available
                         </div>
                       )}
+
+                      {/* Display booking count if there are any */}
+                      {day.date.getDay() === 3 && day.isAvailable && (() => {
+                        const dateStr = day.date.toISOString().split('T')[0];
+                        const bookingsCount = bookingsByDate[dateStr]?.length || 0;
+                        if (bookingsCount > 0) {
+                          return (
+                            <div className="mt-1 text-xs bg-amber-50 text-amber-700 px-1 py-0.5 rounded text-center">
+                              {bookingsCount} bookings
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
                     </div>
                   ))}
                 </div>
@@ -378,71 +464,140 @@ export default function TeacherSettings() {
           </div>
 
           {/* Time Slot Management */}
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-8">
-            <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-4">
-              <h3 className="text-white text-lg font-semibold">Time Slot Management</h3>
-              <p className="text-indigo-100 text-sm">Toggle time slots for specific dates</p>
-            </div>
+         {/* Time Slot Management - with individual slot selection */}
+<div className="bg-white rounded-xl shadow-sm overflow-hidden mb-8">
+  <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-4">
+    <div className="flex justify-between items-center">
+      <div>
+        <h3 className="text-white text-lg font-semibold">Time Slot Management</h3>
+        <p className="text-indigo-100 text-sm">Configure time slots for specific dates</p>
+      </div>
 
-            <div className="p-6">
-              {isLoading ? (
-                <div className="flex justify-center items-center h-64">
-                  <div className="animate-spin rounded-full h-10 w-10 border-t-4 border-b-4 border-indigo-600"></div>
-                </div>
-              ) : availableDates.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  No available dates selected. Please select dates in the calendar above.
-                </div>
-              ) : (
-                <div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {availableDates.map((date, dateIndex) => {
-                      const dateString = date.toISOString().split('T')[0];
-                      const dateSlotsConfig = customTimeSlots[dateString] || defaultTimeSlots[dateString] || {};
+      {/* Keep the bulk actions, but make them less prominent */}
+      <div className="flex space-x-2 text-xs">
+        <button
+          onClick={() => availableDates.length > 0 && handleSelectAll(availableDates[0])}
+          className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-2 py-1 rounded"
+          disabled={availableDates.length === 0}
+        >
+          Select All
+        </button>
+        <button
+          onClick={() => availableDates.length > 0 && handleDeselectAll(availableDates[0])}
+          className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-2 py-1 rounded"
+          disabled={availableDates.length === 0}
+        >
+          Deselect All
+        </button>
+      </div>
+    </div>
+  </div>
 
-                      return (
-                        <div key={dateIndex} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                          <h4 className="font-medium text-lg text-gray-800 mb-3">
-                            {date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                          </h4>
+  <div className="p-6">
+    {isLoading ? (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-4 border-b-4 border-indigo-600"></div>
+      </div>
+    ) : availableDates.length === 0 ? (
+      <div className="text-center py-8 text-gray-500">
+        No available dates selected. Please select dates in the calendar above.
+      </div>
+    ) : (
+      <div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {availableDates.map((date, dateIndex) => {
+            const dateString = date.toISOString().split('T')[0];
+            const dateSlotsConfig = customTimeSlots[dateString] || defaultTimeSlots[dateString] || {};
+            const bookingsForDate = bookingsByDate[dateString] || [];
 
-                          <div className="grid grid-cols-3 gap-2">
-                            {allTimeSlots.map((timeSlot, slotIndex) => (
-                              <button
-                                key={slotIndex}
-                                type="button"
-                                onClick={() => toggleTimeSlot(date, timeSlot)}
-                                className={`p-2 rounded-lg text-center border ${
-                                  dateSlotsConfig[timeSlot]
-                                    ? 'bg-green-100 border-green-300 text-green-800'
-                                    : 'bg-red-100 border-red-300 text-red-800'
-                                }`}
-                              >
-                                <div className="flex items-center justify-center">
-                                  <span>{timeSlot}</span>
-                                  <span className="ml-2">
-                                    {dateSlotsConfig[timeSlot] ? (
-                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                      </svg>
-                                    ) : (
-                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                                      </svg>
-                                    )}
-                                  </span>
-                                </div>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
+            // Display a helpful message about how to use this section
+            const hasBookings = bookingsForDate.length > 0;
+
+            return (
+              <div key={dateIndex} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                <h4 className="font-medium text-lg text-gray-800 mb-3">
+                  {date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                </h4>
+
+                {/* If there are bookings, show a badge */}
+                {hasBookings && (
+                  <div className="mb-3 text-sm bg-amber-50 text-amber-800 py-1 px-2 rounded-lg inline-block">
+                    {bookingsForDate.length} bookings
                   </div>
+                )}
+
+                {/* Info text about how to select slots */}
+                <p className="text-sm text-gray-500 mb-3">
+                  Click on individual time slots to toggle their availability. Booked slots cannot be modified.
+                </p>
+
+                {/* Bulk action buttons for THIS specific date */}
+                <div className="flex space-x-2 mb-3">
+                  <button
+                    onClick={() => handleSelectAll(date)}
+                    className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded"
+                  >
+                    Enable All
+                  </button>
+                  <button
+                    onClick={() => handleDeselectAll(date)}
+                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded"
+                  >
+                    Disable All
+                  </button>
                 </div>
-              )}
-            </div>
-          </div>
+
+                {/* Time slots grid - improved layout */}
+                <div className="grid grid-cols-4 gap-2">
+                  {allTimeSlots.map((timeSlot, slotIndex) => {
+                    // Check if this slot is booked by someone
+                    const booking = bookingsForDate.find(b => b.timeSlot === timeSlot);
+                    const isBooked = !!booking;
+
+                    // Is the slot enabled by the teacher
+                    const isEnabled = dateSlotsConfig[timeSlot] !== false;
+
+                    return (
+                      <button
+                        key={slotIndex}
+                        type="button"
+                        disabled={isBooked}
+                        onClick={() => !isBooked && toggleTimeSlot(date, timeSlot)}
+                        className={`py-2 px-1 rounded-lg transition-all text-center relative ${
+                          isBooked
+                            ? 'bg-white border border-gray-100 text-gray-300 cursor-not-allowed'
+                            : isEnabled
+                              ? 'bg-white border border-green-200 text-gray-700 hover:border-green-300'
+                              : 'bg-white border border-red-200 text-gray-700 hover:border-red-300'
+                        }`}
+                      >
+                        <div className="text-center">
+                          <span className="text-sm font-medium">{timeSlot}</span>
+                          {isBooked ? (
+                            <span className="block mt-0.5 text-xs">Booked</span>
+                          ) : (
+                            <span className="block mt-0.5 text-xs">
+                              {isEnabled ? 'Available' : 'Disabled'}
+                            </span>
+                          )}
+                          {isBooked && booking?.studentName && (
+                            <span className="block text-xs text-gray-400 truncate" title={booking.studentName}>
+                              {booking.studentName}
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    )}
+  </div>
+</div>
 
           {/* Save Button */}
           <div className="flex justify-end">

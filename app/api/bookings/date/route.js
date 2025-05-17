@@ -1,53 +1,69 @@
 // app/api/bookings/date/route.js
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 
 export async function GET(request) {
-  // Hardcoded teacher ID for Dr. Rajeeb
-  const teacherId = 'rajeeb';
   const { searchParams } = new URL(request.url);
   const dateParam = searchParams.get('date');
 
+  // Hardcoded teacher ID for Dr. Rajeeb
+  const teacherId = 'rajeeb';
+
   try {
-    let bookingsQuery;
-
-    if (dateParam) {
-      // Convert date string to start and end of day
-      const date = new Date(dateParam);
-      const startOfDay = new Date(date);
-      startOfDay.setHours(0, 0, 0, 0);
-
-      const endOfDay = new Date(date);
-      endOfDay.setHours(23, 59, 59, 999);
-
-      // Query bookings for the specified date
-      bookingsQuery = query(
-        collection(db, 'bookings'),
-        where('teacherId', '==', teacherId),
-        where('date', '>=', startOfDay),
-        where('date', '<=', endOfDay),
-        orderBy('date', 'asc')
-      );
-    } else {
-      // Query all bookings for this teacher
-      bookingsQuery = query(
-        collection(db, 'bookings'),
-        where('teacherId', '==', teacherId),
-        orderBy('date', 'asc')
-      );
+    if (!dateParam) {
+      return NextResponse.json({ error: 'Date parameter is required' }, { status: 400 });
     }
 
-    const bookingsSnapshot = await getDocs(bookingsQuery);
-    const bookings = [];
+    console.log(`Fetching bookings for date: ${dateParam}`);
 
-    bookingsSnapshot.forEach((doc) => {
+    // Parse the date
+    const date = new Date(dateParam);
+
+    // Create start/end of day
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    console.log(`Date range: ${startOfDay.toISOString()} to ${endOfDay.toISOString()}`);
+
+    // IMPORTANT: Do not filter by status - get ALL bookings
+    const bookingsQuery = query(
+      collection(db, 'bookings'),
+      where('teacherId', '==', teacherId),
+      where('date', '>=', startOfDay),
+      where('date', '<=', endOfDay)
+    );
+
+    const bookingsSnapshot = await getDocs(bookingsQuery);
+    console.log(`Found ${bookingsSnapshot.size} bookings for the date`);
+
+    const bookings = [];
+    bookingsSnapshot.forEach(doc => {
       const data = doc.data();
-      bookings.push({
+
+      // Format the date appropriately
+      let formattedDate = null;
+      if (data.date) {
+        if (typeof data.date.toDate === 'function') {
+          formattedDate = data.date.toDate().toISOString();
+        } else if (data.date instanceof Date) {
+          formattedDate = data.date.toISOString();
+        } else {
+          formattedDate = new Date(data.date).toISOString();
+        }
+      }
+
+      const booking = {
         id: doc.id,
         ...data,
-        date: data.date.toDate().toISOString() // Convert Firestore timestamp to ISO string
-      });
+        date: formattedDate
+      };
+
+      bookings.push(booking);
+      console.log(`Booking found: ${booking.timeSlot} - ${booking.studentName}`);
     });
 
     return NextResponse.json(bookings);

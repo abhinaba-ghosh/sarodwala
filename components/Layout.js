@@ -8,7 +8,7 @@ export default function Layout({ children }) {
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
             <Link href="/" className="text-2xl font-bold text-indigo-600">
-              RiyazTime
+              Sarodwala
             </Link>
             <nav className="hidden md:flex space-x-6">
               <Link href="/" className="text-gray-600 hover:text-gray-900">
@@ -27,7 +27,7 @@ export default function Layout({ children }) {
       <footer className="bg-white border-t border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
           <p className="text-center text-gray-500 text-sm">
-            © {new Date().getFullYear()} RiyazTime. All rights reserved.
+            © {new Date().getFullYear()} Sarodwala. All rights reserved.
           </p>
         </div>
       </footer>
