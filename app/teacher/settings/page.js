@@ -91,7 +91,7 @@ export default function TeacherSettings() {
     }
 
     loadTeacherSettings();
-  }, [selectedMonth, selectedYear]);
+  }, [selectedMonth, selectedYear, generateDefaultAvailableDates, generateDefaultTimeSlots]);
 
   function generateDefaultAvailableDates() {
     const defaultDates = [];
