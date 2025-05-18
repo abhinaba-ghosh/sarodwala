@@ -18,11 +18,11 @@ export default function TeacherSettings() {
   const [customTimeSlots, setCustomTimeSlots] = useState({});
 
   // All possible time slots
-  const allTimeSlots = [
-    '5:30 PM', '6:00 PM', '6:30 PM', '7:00 PM', '7:30 PM',
-    '8:00 PM', '8:30 PM', '9:00 PM', '9:30 PM', '10:00 PM',
-    '10:30 PM', '11:00 PM'
-  ];
+const allTimeSlots = [
+  '5:00 PM', '5:30 PM', '6:00 PM', '6:30 PM', '7:00 PM', '7:30 PM',
+  '8:00 PM', '8:30 PM', '9:00 PM', '9:30 PM', '10:00 PM', '10:30 PM'
+];
+
 
   // Generate calendar for the selected month and year
   const generateCalendar = () => {
@@ -324,7 +324,7 @@ export default function TeacherSettings() {
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
             <Link href="/" className="text-2xl font-bold text-indigo-600">
-              RiyazTime
+              Sarodwala
             </Link>
             <div className="flex space-x-4">
               <Link
@@ -632,7 +632,7 @@ export default function TeacherSettings() {
       <footer className="bg-white border-t border-gray-200 mt-12">
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
           <p className="text-center text-gray-500 text-base">
-            © {new Date().getFullYear()} RiyazTime. All rights reserved.
+            © {new Date().getFullYear()} Sarodwala. All rights reserved.
           </p>
         </div>
       </footer>

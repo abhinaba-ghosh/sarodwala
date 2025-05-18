@@ -195,6 +195,7 @@ export default function BookingPage() {
 
       // All possible time slots
       const allTimeSlots = [
+        "5:00 PM",
         "5:30 PM",
         "6:00 PM",
         "6:30 PM",
@@ -206,7 +207,6 @@ export default function BookingPage() {
         "9:30 PM",
         "10:00 PM",
         "10:30 PM",
-        "11:00 PM",
       ];
 
       // Include all slots but mark some as booked
@@ -445,7 +445,7 @@ export default function BookingPage() {
                       whatsAppOptIn: true,
                       calendarSync: false,
                     });
-                     window.location.href = window.location.pathname;
+                    window.location.href = window.location.pathname;
                   }}
                   className="w-full py-3 px-4 bg-indigo-600 text-white text-lg font-medium rounded-lg hover:bg-indigo-700 transition-colors"
                 >

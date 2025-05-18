@@ -129,7 +129,7 @@ export default function TeacherDashboard() {
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
             <Link href="/" className="text-2xl font-bold text-indigo-600">
-              RiyazTime
+              Sarodwala
             </Link>
             <Link
               href="/teacher/settings"
@@ -247,7 +247,7 @@ export default function TeacherDashboard() {
           {/* Daily Schedule */}
           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
             <div className="bg-gradient-to-r from-indigo-500 to-purple-600 py-4 px-6">
-              <h2 className="text-lg font-semibold text-white">Wednesday Schedule (5:30 PM - 11:00 PM)</h2>
+              <h2 className="text-lg font-semibold text-white">Wednesday Schedule (5:00 PM - 10:30 PM)</h2>
             </div>
 
             {isLoading ? (
@@ -315,7 +315,7 @@ export default function TeacherDashboard() {
       <footer className="bg-white border-t border-gray-200 mt-12">
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
           <p className="text-center text-gray-500 text-sm">
-            © {new Date().getFullYear()} RiyazTime. All rights reserved.
+            © {new Date().getFullYear()} Sarodwala. All rights reserved.
           </p>
         </div>
       </footer>

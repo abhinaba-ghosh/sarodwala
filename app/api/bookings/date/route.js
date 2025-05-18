@@ -63,7 +63,7 @@ export async function GET(request) {
       };
 
       bookings.push(booking);
-      console.log(`Booking found: ${booking.timeSlot} - ${booking.studentName}`);
+      // console.log(`Booking found: ${booking.timeSlot} - ${booking.studentName}`);
     });
 
     return NextResponse.json(bookings);
