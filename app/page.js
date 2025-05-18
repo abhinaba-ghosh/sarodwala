@@ -854,43 +854,46 @@ export default function BookingPage() {
               </div>
 
               {/* Options */}
-              <div className="mb-6">
-                <div className="flex items-center mb-3">
-                  <input
-                    type="checkbox"
-                    id="whatsAppOptIn"
-                    name="whatsAppOptIn"
-                    checked={formData.whatsAppOptIn}
-                    onChange={handleChange}
-                    className="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                  />
-                  <label
-                    htmlFor="whatsAppOptIn"
-                    className="ml-2 block text-base text-gray-700"
-                  >
-                    Receive confirmation via WhatsApp
-                  </label>
-                </div>
+             <div className="mb-6">
+  {/* Options section with only "Coming Soon" features */}
+  <div className="flex items-center mb-3">
+    <input
+      type="checkbox"
+      id="whatsAppOptIn"
+      name="whatsAppOptIn"
+      disabled={true}
+      className="h-5 w-5 text-gray-400 focus:ring-gray-300 border-gray-300 rounded cursor-not-allowed"
+    />
+    <label
+      htmlFor="whatsAppOptIn"
+      className="ml-2 flex items-center text-base text-gray-500"
+    >
+      Receive confirmation via WhatsApp
+      <span className="ml-2 bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded">
+        Coming Soon
+      </span>
+    </label>
+  </div>
 
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="calendarSync"
-                    name="calendarSync"
-                    disabled={true}
-                    className="h-5 w-5 text-gray-400 focus:ring-gray-300 border-gray-300 rounded cursor-not-allowed"
-                  />
-                  <label
-                    htmlFor="calendarSync"
-                    className="ml-2 flex items-center text-base text-gray-500"
-                  >
-                    Add to my Google Calendar
-                    <span className="ml-2 bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded">
-                      Coming Soon
-                    </span>
-                  </label>
-                </div>
-              </div>
+  <div className="flex items-center">
+    <input
+      type="checkbox"
+      id="calendarSync"
+      name="calendarSync"
+      disabled={true}
+      className="h-5 w-5 text-gray-400 focus:ring-gray-300 border-gray-300 rounded cursor-not-allowed"
+    />
+    <label
+      htmlFor="calendarSync"
+      className="ml-2 flex items-center text-base text-gray-500"
+    >
+      Add to my Google Calendar
+      <span className="ml-2 bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded">
+        Coming Soon
+      </span>
+    </label>
+  </div>
+</div>
 
               {/* Submit Button */}
               <button
