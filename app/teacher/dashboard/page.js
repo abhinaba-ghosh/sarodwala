@@ -13,6 +13,10 @@ export default function TeacherDashboard() {
     totalHours: 0,
     totalRevenue: 0
   });
+  const [cancelingBookingId, setCancelingBookingId] = useState(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [selectedBookingId, setSelectedBookingId] = useState(null);
+  const [selectedBookingName, setSelectedBookingName] = useState('');
 
   // Get next Wednesday
   function getNextWednesday() {
@@ -49,6 +53,51 @@ export default function TeacherDashboard() {
     const nextDate = new Date(selectedDate);
     nextDate.setDate(nextDate.getDate() + 7);
     setSelectedDate(nextDate);
+  };
+
+  // Function to handle booking cancellation
+  const handleCancelBooking = (bookingId, studentName) => {
+    setSelectedBookingId(bookingId);
+    setSelectedBookingName(studentName);
+    setShowConfirmModal(true);
+  };
+
+  // Function to confirm cancellation
+  const confirmCancellation = async () => {
+    if (!selectedBookingId) return;
+
+    try {
+      setCancelingBookingId(selectedBookingId);
+      setShowConfirmModal(false);
+
+      const response = await fetch(`/api/bookings/${selectedBookingId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to cancel booking');
+      }
+
+      // Refresh the bookings list
+      const updatedBookings = bookings.filter(booking => booking.id !== selectedBookingId);
+      setBookings(updatedBookings);
+
+      // Update statistics
+      setStats({
+        totalStudents: updatedBookings.length,
+        totalHours: updatedBookings.length * 0.5, // Each class is 30 minutes
+        totalRevenue: updatedBookings.length * 500 // ₹500 per class
+      });
+
+      // Show success message
+      alert('Booking cancelled successfully. The time slot is now available for booking.');
+    } catch (error) {
+      console.error('Error cancelling booking:', error);
+      alert('Error cancelling booking. Please try again.');
+    } finally {
+      setCancelingBookingId(null);
+      setSelectedBookingId(null);
+    }
   };
 
   // Fetch bookings for the selected date
@@ -299,10 +348,37 @@ export default function TeacherDashboard() {
                       </div>
                     </div>
 
-                    <div className="mt-4 md:mt-0 md:ml-6">
+                    <div className="mt-4 md:mt-0 md:ml-6 flex items-center space-x-3">
                       <span className="inline-flex px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 text-sm font-medium">
-                        Upcoming
+                        {booking.status || "Upcoming"}
                       </span>
+
+                      <button
+                        onClick={() => handleCancelBooking(booking.id, booking.studentName)}
+                        disabled={cancelingBookingId === booking.id}
+                        className={`flex items-center px-3 py-1 ${
+                          cancelingBookingId === booking.id
+                            ? 'bg-gray-100 text-gray-400'
+                            : 'bg-red-50 text-red-600 hover:bg-red-100'
+                        } rounded-lg transition-colors`}
+                      >
+                        {cancelingBookingId === booking.id ? (
+                          <>
+                            <svg className="animate-spin h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Cancelling...
+                          </>
+                        ) : (
+                          <>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            Cancel
+                          </>
+                        )}
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -319,6 +395,35 @@ export default function TeacherDashboard() {
           </p>
         </div>
       </footer>
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 m-4 max-w-sm w-full">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Cancel Booking</h3>
+            <p className="text-gray-600 mb-4">
+              Are you sure you want to cancel the booking for <span className="font-medium">{selectedBookingName}</span>?
+            </p>
+            <p className="text-gray-500 text-sm mb-6">
+              This will free up the time slot for other students to book.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                No, Keep It
+              </button>
+              <button
+                onClick={confirmCancellation}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+              >
+                Yes, Cancel Booking
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
